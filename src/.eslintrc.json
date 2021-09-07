@@ -1,0 +1,7 @@
+{
+    "extends": "eslint:recommended", //eslint rule 설정
+    "env": {    //eslint 동작환경
+        "node": true,
+        "es2021": true
+    }
+}
