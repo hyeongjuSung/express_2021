@@ -1,5 +1,5 @@
 import {Router} from "express";
-import _  from "lodash";
+import _ from "lodash";
 
 const boardRouter = Router();
 

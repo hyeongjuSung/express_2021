@@ -1,63 +1,87 @@
 import {Router} from "express";
 import _ from "lodash";
+import sequelize from "sequelize";
 import faker from "faker";
 faker.locale = "ko";
 
+const seq = new sequelize('express', 'root', '123456', {
+    host: 'localhost',
+    dialect: 'mysql'
+});
+
+const check_sequelize_auth = async () => {
+    try{
+        await seq.authenticate();
+        console.log('연결 성공');
+    }catch(err){
+        console.log('연결 실패', err);
+    }
+};
+check_sequelize_auth();
+
+const User = seq.define("user", {
+    name: {
+        type: sequelize.STRING,
+        allowNull: false
+    },
+    age: {
+        type: sequelize.INTEGER,
+        allowNull: false
+    }
+});
+
+const user_sync = async() => {
+    try{
+        await User.sync({force:true});
+        for(let i=0; i<100; i++){
+            User.create({
+                name: faker.name.lastName()+faker.name.firstName(),
+                age: getRandomInt(15,50)
+            })
+        }
+    }catch(err){
+        console.log(err)
+    }   
+}
+user_sync();
+
 const userRouter = Router();
 
-// let users = [{
-//     id: 1,
-//     name: "홍길동",
-//     age: 21
-// },{
-//     id: 2,
-//     name: "김길동",
-//     age: 25
-// },{
-//     id: 3,
-//     name: "오길동",
-//     age: 28
-// },{
-//     id: 4,
-//     name: "고길동",
-//     age: 33
-// },{
-//     id: 5,
-//     name: "박길동",
-//     age: 40
-// }];
 const getRandomInt = (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min) + min);
 }
 
-
 let users = [];
-for(let i=1; i<10000; i+=1) {
-    users.push({
-        id: i,
-        name: faker.name.lastName()+faker.name.firstName(),
-        age: getRandomInt(15,50),
-    })
-}
 
-userRouter.get("/", (req, res) => {
-    let { name, age } = req.query;
-    let filteredUsers = users;
-    if(name) {
-        filteredUsers = _.filter(filteredUsers, (user)=>{
-            return user.name.includes(name);
-        });
-    }
+userRouter.get("/", async(req, res) => {
+    try{
+        let { name, age } = req.query;
+        const { Op } = sequelize;
+        const findUserQuery = {
+            attributes: ['name', 'age'],
+        }
+        let result;
 
-    if(age) {
-        filteredUsers = _.filter(filteredUsers, ['age', parseInt(age)])
+        if(name && age) {
+            findUserQuery['where'] = { name: {[Op.substring]: name}, age }
+        }else if(name) {
+            findUserQuery['where'] = { name: {[Op.substring]: name} }
+        }else if(age) {
+            findUserQuery['where'] = { age }
+        }
+
+        result = await User.findAll(findUserQuery);
+
+        res.status(200).send({
+            count: result.length,
+            result
+        })
+    }catch(err){
+        console.log(err);
+        res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
     }
-    res.send({
-        count: filteredUsers.length,
-        filteredUsers
-    });
 });
 
 userRouter.get("/:id", (req, res) => {
@@ -81,21 +105,21 @@ userRouter.get("/:id", (req, res) => {
 });
 
 //유저생성
-userRouter.post("/", (req, res) => {
-    const createUser = req.body;
-    const check_user = _.find(users, ["id", createUser.id]);
-
-    let result;
-    if(!check_user && createUser.id && createUser.name && createUser.age){
-        users.push(createUser);
-        result = `${createUser.name}님을 생성했습니다.`
-    } else {
-        result = '입력 요청값이 잘못되었습니다.'
+userRouter.post("/", async(req, res) => {
+    try{
+        const { name, age } = req.body;
+        if(!name || !age) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
+        
+        //key, value가 같을 경우 생략 가능
+        //const result = await User.create({name: name, age: age});
+        const result = await User.create({name, age});
+        res.status(201).send({
+            msg: `id ${result.id}, ${result.name} 유저가 생성되었습니다.`
+        });
+    }catch(err){
+        console.log(err);
+        res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
     }
-
-    res.status(201).send({
-        result
-    });
 });
 
 //name 변경
