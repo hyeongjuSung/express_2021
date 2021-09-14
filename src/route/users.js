@@ -34,7 +34,7 @@ const getRandomInt = (min, max) => {
 
 
 let users = [];
-for(let i=1; i<100; i+=1) {
+for(let i=1; i<10000; i+=1) {
     users.push({
         id: i,
         name: faker.name.lastName()+faker.name.firstName(),
@@ -43,9 +43,20 @@ for(let i=1; i<100; i+=1) {
 }
 
 userRouter.get("/", (req, res) => {
+    let { name, age } = req.query;
+    let filteredUsers = users;
+    if(name) {
+        filteredUsers = _.filter(filteredUsers, (user)=>{
+            return user.name.includes(name);
+        });
+    }
+
+    if(age) {
+        filteredUsers = _.filter(filteredUsers, ['age', parseInt(age)])
+    }
     res.send({
-        count: users.length,
-        users
+        count: filteredUsers.length,
+        filteredUsers
     });
 });
 
