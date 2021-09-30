@@ -96,6 +96,94 @@ userRouter.get("/", async(req, res) => {
     }
 });
 
+
+
+userRouter.get("/:id", (req, res) => {
+    const findUser = _.find(users, {id: parseInt(req.params.id)});
+    let msg;
+
+    if(findUser){
+        msg = "정상적으로 조회되었습니다."
+        res.status(200).send({
+            msg,
+            findUser
+        });
+    } else {
+        msg = "해당 아이디를 가진 유저가 없습니다."
+        res.status(400).send({
+            msg,
+            findUser
+        });
+    }
+    
+});
+
+//유저생성
+userRouter.post("/", async(req, res) => {
+    try{
+        const { name, age } = req.body;
+        if(!name || !age) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
+        
+        //key, value가 같을 경우 생략 가능
+        //const result = await User.create({name: name, age: age});
+        const result = await User.create({name, age});
+        res.status(201).send({
+            msg: `id ${result.id}, ${result.name} 유저가 생성되었습니다.`
+        });
+    }catch(err){
+        console.log(err);
+        res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
+    }
+});
+
+//name 변경
+userRouter.put("/:id", async(req, res) => {
+    try{
+        const { name, age } = req.body;
+
+        const findUser = await User.findOne({
+            where: {
+                id: req.params.id
+            }
+        });
+        if(!findUser || (!name && !age)) {
+            res.status(400).send({msg: '해당 유저가 존재하지 않거나 입력 요청 값이 잘못 되었습니다.'});
+        }
+
+        if(name) findUser.name = name;
+        if(age)  findUser.age  = age;
+
+        await findUser.save();
+
+        res.status(200).send({ msg: '유저 정보가 수정되었습니다.'});
+
+    } catch(err) {
+        console.log(err);
+        res.status(500).send({ msg: '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'});
+    }
+});
+
+//user 지우기
+userRouter.delete("/:id", async(req, res) => {
+    try{
+        let user = await User.findOne({
+            where:{
+                id: req.params.id
+            }
+        })
+        if(!User){
+            req.status(400).send({msg: '해당 유저는 존재하지 않습니다.'});
+        }
+        await user.destroy();
+        req.status(200).send({msg: '유저 정보가 삭제되었습니다.'});
+
+    }catch(err){
+        console.log(err);
+        res.status(500).send({msg: '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'})
+    }
+
+});
+
 userRouter.get("/test/:id", async(req, res) => {
     try{
         // findAll
@@ -152,84 +240,6 @@ userRouter.get("/test/:id", async(req, res) => {
         console.log(err);
         res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
     }
-});
-
-userRouter.get("/:id", (req, res) => {
-    const findUser = _.find(users, {id: parseInt(req.params.id)});
-    let msg;
-
-    if(findUser){
-        msg = "정상적으로 조회되었습니다."
-        res.status(200).send({
-            msg,
-            findUser
-        });
-    } else {
-        msg = "해당 아이디를 가진 유저가 없습니다."
-        res.status(400).send({
-            msg,
-            findUser
-        });
-    }
-    
-});
-
-//유저생성
-userRouter.post("/", async(req, res) => {
-    try{
-        const { name, age } = req.body;
-        if(!name || !age) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
-        
-        //key, value가 같을 경우 생략 가능
-        //const result = await User.create({name: name, age: age});
-        const result = await User.create({name, age});
-        res.status(201).send({
-            msg: `id ${result.id}, ${result.name} 유저가 생성되었습니다.`
-        });
-    }catch(err){
-        console.log(err);
-        res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
-    }
-});
-
-//name 변경
-userRouter.put("/:id", async(req, res) => {
-    const find_user_idx = _.findIndex(users, {id: parseInt(req.params.id)});
-    let result;
-
-    if(find_user_idx !== -1){
-        users[find_user_idx].name = req.body.name;
-        result = "성공적으로 수정되었습니다."
-        res.status(200).send({
-            result
-        })
-    } else {
-        result = `아이디가 ${req.params.id}인 유저가 존재하지 않습니다.`;
-        res.status(400).send({
-            result
-        })
-    }
-});
-
-//user 지우기
-userRouter.delete("/:id", async(req, res) => {
-    try{
-        let user = await User.findOne({
-            where:{
-                id: req.params.id
-            }
-        })
-        if(!User){
-            req.status(400).send({msg: '해당 유저가 존재하지 않습니다.'});
-        }
-        await user.destroy();
-        req.status(200).send({msg: '유저 정보가 삭제되었습니다.'});
-
-    }catch(err){
-        console.log(err);
-        res.status(500).send({msg: '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'})
-    }
-
 });
 
 export default userRouter
