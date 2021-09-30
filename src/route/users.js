@@ -54,7 +54,7 @@ const user_sync = async() => {
             })
         }
     }catch(err){
-        console.log(err)
+        console.log(err);
     }   
 }
 //user_sync();
@@ -149,7 +149,7 @@ userRouter.get("/test/:id", async(req, res) => {
             }
         })
     } catch(err){
-        console.log(err)
+        console.log(err);
         res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
     }
 });
@@ -194,47 +194,21 @@ userRouter.post("/", async(req, res) => {
 
 //name 변경
 userRouter.put("/:id", async(req, res) => {
-    try{
-        const { name, age } = req.body;
-        let user = await User.findOne({
-            where: {
-                id: req.params.id
-            }
-        });
-        if(!user || (!name && !age)) {
-            res.status(400).send({msg: '해당 유저가 존재하지 않거나 입력 요청 값이 잘못 되었습니다.'});
-        }
+    const find_user_idx = _.findIndex(users, {id: parseInt(req.params.id)});
+    let result;
 
-        if(name) user.name = name;
-        if(age)  user.age  = age;
-
-        await user.save();
-
-        res.status(200).send({ msg: '유저 정보가 수정되었습니다.' });
-
-    }catch(err) {
-        console.log(err);
-        res.status(500).send({ msg: '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.' });
+    if(find_user_idx !== -1){
+        users[find_user_idx].name = req.body.name;
+        result = "성공적으로 수정되었습니다."
+        res.status(200).send({
+            result
+        })
+    } else {
+        result = `아이디가 ${req.params.id}인 유저가 존재하지 않습니다.`;
+        res.status(400).send({
+            result
+        })
     }
-
-
-
-
-    // const find_user_idx = _.findIndex(users, {id: parseInt(req.params.id)});
-    // let result;
-
-    // if(find_user_idx !== -1){
-    //     users[find_user_idx].name = req.body.name;
-    //     result = "성공적으로 수정되었습니다."
-    //     res.status(200).send({
-    //         result
-    //     })
-    // } else {
-    //     result = `아이디가 ${req.params.id}인 유저가 존재하지 않습니다.`;
-    //     res.status(400).send({
-    //         result
-    //     })
-    // }
 });
 
 //user 지우기
@@ -242,7 +216,7 @@ userRouter.delete("/:id", async(req, res) => {
     try{
         let user = await User.findOne({
             where:{
-                id: req.params.id;
+                id: req.params.id
             }
         })
         if(!User){
