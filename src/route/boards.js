@@ -1,41 +1,46 @@
 import {Router} from "express";
 import _ from "lodash";
+import sequelize from "sequelize";
+import faker from "faker";
+
+const seq = new sequelize('express', 'root', '123456', {
+    host: 'localhost',
+    dialect: 'mysql',
+    //logging: false
+});
+
+const Board = seq.define("board", {
+    title: {
+        type: sequelize.STRING,
+        allowNull: false
+    },
+    content: {
+        type: sequelize.TEXT,
+        allowNull: true
+    }
+});
+
+const board_sync = async() => {
+    try{
+        await Board.sync({force:true});
+        for(let i=0; i<10000; i++){
+            await Board.create({
+                title: faker.lorem.sentences(1),
+                content: faker.lorem.sentences(10)
+            })
+        }
+    }catch(err){
+        console.log(err)
+    }
+}
+//board_sync();
 
 const boardRouter = Router();
 
-let boards = [{
-    id: 1,
-    title: "게시판 타이틀입니다.",
-    content: "게시판 내용입니다.",
-    createDate: "2021-09-07",
-    updateDate: "2021-10-07"
-}, {
-    id: 2,
-    title: "게시판 타이틀2입니다.",
-    content: "게시판 내용2입니다.",
-    createDate: "2021-09-08",
-    updateDate: "2021-10-08"
-}, {
-    id: 3,
-    title: "게시판 타이틀3입니다.",
-    content: "게시판 내용3입니다.",
-    createDate: "2021-09-09",
-    updateDate: "2021-10-09"
-}, {
-    id: 4,
-    title: "게시판 타이틀4입니다.",
-    content: "게시판 내용4입니다.",
-    createDate: "2021-09-10",
-    updateDate: "2021-10-10"
-}, {
-    id: 5,
-    title: "게시판 타이틀5입니다.",
-    content: "게시판 내용5입니다.",
-    createDate: "2021-09-11",
-    updateDate: "2021-10-11"
-}];
+let boards = [];
 
-boardRouter.get("/", (req, res) => {
+boardRouter.get("/", async(req, res) => {
+    const boards = await Board.findAll();
     res.send({
         count: boards.length,
         boards
