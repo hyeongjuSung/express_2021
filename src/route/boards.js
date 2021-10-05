@@ -121,26 +121,6 @@ boardRouter.put("/:id", async(req, res) => {
 });
 
 //게시글 지우기
-// boardRouter.delete("/:id", (req, res) => {
-//     const check_board = _.find(boards, {id: parseInt(req.params.id)});
-//     let result;
-
-//     // 같은 아이디 값을 가진 값이 있으면?
-//     if(check_board){
-//         // lodash의 reject 메서드를 이용해 해당 id를 가진 객체를 삭제
-//         boards = _.reject(boards, ["id", parseInt(req.params.id)]);
-//         result = "성공적으로 삭제 되었습니다."; 
-//         res.status(200).send({
-//             result
-//         });
-//     } else {
-//         result = `${req.params.id} 아이디를 가진 게시글이 존재하지 않습니다.`;
-//         res.status(400).send({
-//             result
-//         })
-//     }
-
-// });
 boardRouter.delete("/:id", async(req, res) => {
     try{
         let board = await Board.findOne({
@@ -148,10 +128,10 @@ boardRouter.delete("/:id", async(req, res) => {
                 id: req.params.id
             }
         })
-        if(!Board){
-            req.status(400).send({msg: '해당 게시글은 존재하지 않습니다.'});
+        if(!board){
+            res.status(400).send({msg: '해당 게시글은 존재하지 않습니다.'});
         }
-        await Board.destroy();
+        await board.destroy();
         res.status(200).send({msg: '게시글이 삭제되었습니다.'});
 
     }catch(err){

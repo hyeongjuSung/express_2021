@@ -171,8 +171,8 @@ userRouter.delete("/:id", async(req, res) => {
                 id: req.params.id
             }
         })
-        if(!User){
-            req.status(400).send({msg: '해당 유저는 존재하지 않습니다.'});
+        if(!user){
+            res.status(400).send({msg: '해당 유저는 존재하지 않습니다.'});
         }
         await user.destroy();
         res.status(200).send({msg: '유저 정보가 삭제되었습니다.'});
