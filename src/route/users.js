@@ -29,11 +29,12 @@ const User = seq.define("user", {
     age: {
         type: sequelize.INTEGER,
         allowNull: false
-    },
-    password: {
-        type: sequelize.STRING,
-        allowNull: false
     }
+    // },
+    // password: {
+    //     type: sequelize.STRING,
+    //     allowNull: false
+    // }
 });
 
 // const initDB = async() => {
@@ -72,7 +73,7 @@ userRouter.get("/", async(req, res) => {
         let { name, age } = req.query;
         const { Op } = sequelize;
         const findUserQuery = {
-            attributes: ['name', 'age'],
+            attributes: ['id', 'name', 'age'],
         }
         let result;
 
@@ -140,20 +141,19 @@ userRouter.post("/", async(req, res) => {
 userRouter.put("/:id", async(req, res) => {
     try{
         const { name, age } = req.body;
-
-        const findUser = await User.findOne({
+        let user = await User.findOne({
             where: {
                 id: req.params.id
             }
         });
-        if(!findUser || (!name && !age)) {
+        if(!user || (!name && !age)) {
             res.status(400).send({msg: '해당 유저가 존재하지 않거나 입력 요청 값이 잘못 되었습니다.'});
         }
 
-        if(name) findUser.name = name;
-        if(age)  findUser.age  = age;
+        if(name) user.name = name;
+        if(age)  user.age  = age;
 
-        await findUser.save();
+        await user.save();
 
         res.status(200).send({ msg: '유저 정보가 수정되었습니다.'});
 
@@ -175,7 +175,7 @@ userRouter.delete("/:id", async(req, res) => {
             req.status(400).send({msg: '해당 유저는 존재하지 않습니다.'});
         }
         await user.destroy();
-        req.status(200).send({msg: '유저 정보가 삭제되었습니다.'});
+        res.status(200).send({msg: '유저 정보가 삭제되었습니다.'});
 
     }catch(err){
         console.log(err);
