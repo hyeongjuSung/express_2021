@@ -76,21 +76,22 @@ boardRouter.get("/:id", async(req, res) => {
 });
 
 //글생성
-boardRouter.post("/", (req, res) => {
-    const createBoard = req.body;
-    const check_board = _.find(boards, ["id", createBoard.id]);
-
-    let result;
-    if(!check_board && createBoard.id && createBoard.title && createBoard.content && createBoard.createDate && createBoard.updateDate){
-        boards.push(createBoard);
-        result = `${createBoard.id}번 글을 생성했습니다.`
-    } else {
-        result = '입력 요청값이 잘못되었습니다.'
+boardRouter.post("/", async(req, res) => {
+    try{
+        const { title, content } = req.body;
+        if(!title) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
+        
+        const result = await Board.create({
+            title: title ? title : null, 
+            content: content ? content : null
+        });
+        res.status(201).send({
+            msg: `id ${result.id}, ${result.title} 게시글이 생성되었습니다.`
+        });
+    }catch(err){
+        console.log(err);
+        res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
     }
-
-    res.status(201).send({
-        result
-    });
 });
 
 //content 변경
