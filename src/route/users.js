@@ -3,62 +3,27 @@ import _ from "lodash";
 import sequelize from "sequelize";
 import faker from "faker";
 import bcrypt from "bcrypt";
+import db from '../models/index.js'
+
 faker.locale = "ko";
+const User = db.User;
 
-const seq = new sequelize('express', 'root', '123456', {
-    host: 'localhost',
-    dialect: 'mysql',
-    //logging: false
-});
-
-const check_sequelize_auth = async () => {
-    try{
-        await seq.authenticate();
-        console.log('연결 성공');
-    }catch(err){
-        console.log('연결 실패', err);
-    }
-};
-check_sequelize_auth();
-
-const User = seq.define("user", {
-    name: {
-        type: sequelize.STRING,
-        allowNull: false
-    },
-    age: {
-        type: sequelize.INTEGER,
-        allowNull: false
-    }
-    // },
-    // password: {
-    //     type: sequelize.STRING,
-    //     allowNull: false
-    // }
-});
-
-// const initDB = async() => {
-//     await User.sync();
-//     await Board.sync();
+// const user_sync = async() => {
+//     try{
+//         await User.sync({force:true});
+//         for(let i=0; i<100; i++){
+//             const hashpwd = await bcrypt.hash("test1234", 6);
+//             User.create({
+//                 name: faker.name.lastName()+faker.name.firstName(),
+//                 age: getRandomInt(15,50),
+//                 password: hashpwd
+//             })
+//         }
+//     }catch(err){
+//         console.log(err);
+//     }   
 // }
-// initDB();
-
-const user_sync = async() => {
-    try{
-        await User.sync({force:true});
-        for(let i=0; i<100; i++){
-            const hashpwd = await bcrypt.hash("test1234", 6);
-            User.create({
-                name: faker.name.lastName()+faker.name.firstName(),
-                age: getRandomInt(15,50),
-                password: hashpwd
-            })
-        }
-    }catch(err){
-        console.log(err);
-    }   
-}
-//user_sync();
+// user_sync();
 
 const userRouter = Router();
 
@@ -96,8 +61,6 @@ userRouter.get("/", async(req, res) => {
         res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})
     }
 });
-
-
 
 userRouter.get("/:id", (req, res) => {
     const findUser = _.find(users, {id: parseInt(req.params.id)});

@@ -13,4 +13,4 @@ db.sequelize.sync().then(()=>{
     app.use("/users", user_router);
     app.use("/boards", board_router);
     app.listen(3000);
-}
+});

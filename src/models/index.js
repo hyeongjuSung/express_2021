@@ -1,21 +1,15 @@
-import fs from 'fs';
 import dotenv from 'dotenv';
-import path from 'path';
 import Sequelize from 'sequelize';
-import { fileURLToPath } from 'url';
+import User from './users.js'
+
 dotenv.config();
 
-const { DATABASE, DATABASE_HOST, USERNAME, PASSWORD } = process.env;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.resolve();
+const { DATABASE, DATABASE_HOST, USER_NAME, PASSWORD, LOGGING } = process.env;
 
-const basename = path.basename(__filename);
-const db = {};
-
-const sequelize = new Sequelize(DATABASE, USERNAME, PASSWORD, {
-    host: 'localhost',
+const sequelize = new Sequelize(DATABASE, USER_NAME, PASSWORD, {
+    host: DATABASE_HOST,
     dialect: 'mysql',
-    // logging: false
+    logging: (LOGGING ==='true')
 });
 
 sequelize.authenticate().then(() => {
@@ -24,13 +18,10 @@ sequelize.authenticate().then(() => {
     console.log("연결 실패: ", err);
 });
 
-fs.readdirSync(__dirname).filter(file => {
-    return (file.indexOf(".") !== 0) && (file !== basename) && (file.slice(-3) === ".js");
-}).forEach(file => {
-    let model = sequelize["import"](path.join(__dirname, file));
-    db[model.name] = model;
-    console.log(db);
-});
+
+const db = {
+    User: User(sequelize, Sequelize.DataTypes)
+};
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
