@@ -1,42 +1,16 @@
 import {Router} from "express";
-import _ from "lodash";
-import sequelize from "sequelize";
-import faker from "faker";
-import bcrypt from "bcrypt";
+
 import db from '../models/index.js'
 
 faker.locale = "ko";
-const User = db.User;
-
-// const user_sync = async() => {
-//     try{
-//         await User.sync({force:true});
-//         for(let i=0; i<100; i++){
-//             const hashpwd = await bcrypt.hash("test1234", 6);
-//             User.create({
-//                 name: faker.name.lastName()+faker.name.firstName(),
-//                 age: getRandomInt(15,50),
-//                 password: hashpwd
-//             })
-//         }
-//     }catch(err){
-//         console.log(err);
-//     }   
-// }
-// user_sync();
+const { User } = db;
 
 const userRouter = Router();
-
-const getRandomInt = (min, max) => {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min) + min);
-}
 
 userRouter.get("/", async(req, res) => {
     try{
         let { name, age } = req.query;
-        const { Op } = sequelize;
+        const { Op } = db.sequelize;
         const findUserQuery = {
             attributes: ['id', 'name', 'age'],
         }
@@ -51,7 +25,7 @@ userRouter.get("/", async(req, res) => {
         }
 
         result = await User.findAll(findUserQuery);
-
+        console.log("전체 유저 조회");
         res.status(200).send({
             count: result.length,
             result
@@ -62,24 +36,18 @@ userRouter.get("/", async(req, res) => {
     }
 });
 
-userRouter.get("/:id", (req, res) => {
-    const findUser = _.find(users, {id: parseInt(req.params.id)});
-    let msg;
-
-    if(findUser){
-        msg = "정상적으로 조회되었습니다."
-        res.status(200).send({
-            msg,
-            findUser
+userRouter.get("/:id", async(req, res) => {
+    try{
+        const findUser = await User.findOne({
+            where: {
+                id: req.params.id
+            }
         });
-    } else {
-        msg = "해당 아이디를 가진 유저가 없습니다."
-        res.status(400).send({
-            msg,
-            findUser
-        });
+        res.status(200).send({findUser})
+    }catch(err){
+        console.log(err);
+        res.status(500).send(err);
     }
-    
 });
 
 //유저생성
