@@ -94,22 +94,29 @@ boardRouter.post("/", async(req, res) => {
     }
 });
 
-//content 변경
-boardRouter.put("/:id", (req, res) => {
-    const find_board_idx = _.findIndex(boards, {id: parseInt(req.params.id)});
-    let result;
+boardRouter.put("/:id", async(req, res) => {
+    try{
+        const { title, content } = req.body;
+        let board = await Board.findOne({
+            where: {
+                id: req.params.id
+            }
+        })
+        
+        if(!board || (!title && !content)) {
+            res.status(400).send({msg: '해당 게시글이 존재하지 않거나 입력 요청 값이 잘못 되었습니다.'});
+        }
 
-    if(find_board_idx !== -1){
-        boards[find_board_idx].content = req.body.content;
-        result = "성공적으로 수정되었습니다."
-        res.status(200).send({
-            result
-        })
-    } else {
-        result = `아이디가 ${req.params.id}번인 게시글이 존재하지 않습니다.`;
-        res.status(400).send({
-            result
-        })
+        if(title) board.title = title;
+        if(content)  board.content  = content;
+
+        await board.save();
+
+        res.status(200).send({ msg: '게시글이 수정되었습니다.'});
+
+    } catch(err) {
+        console.log(err);
+        res.status(500).send({ msg: '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.'});
     }
 });
 
