@@ -25,6 +25,10 @@ boardRouter.get("/", async(req, res) => {
 boardRouter.get("/:id", async(req, res) => {
     try{
         const findBoard = await Board.findOne({
+            include: [{
+                model: User,
+                attributes: ["id", "name"]
+            }],
             where: {
                 id: req.params.id
             }
