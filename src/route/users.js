@@ -1,4 +1,5 @@
 import {Router} from "express";
+import bcrypt from "bcrypt";
 import db from '../models/index.js'
 import user from "../models/user.js";
 
@@ -53,20 +54,23 @@ userRouter.get("/:id", async(req, res) => {
 userRouter.post("/", async(req, res) => {
     try{
         const { name, age, password, permission } = req.body;
-        if(!name || !age) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
-        
-        //key, value가 같을 경우 생략 가능
-        //const result = await User.create({name: name, age: age});
-        const user = await User.create({name, age, password});
+        if(!name || !age || !permission) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
+        else {
+            //key, value가 같을 경우 생략 가능
+            //const result = await User.create({name: name, age: age});
+            const hashpwd = await bcrypt.hash(password, 4); // password hash 처리
 
-        await user.createPermission({
-            title: permission.title,
-            level: permission.level
-        })
+            const user = await User.create({name, age, password: hashpwd});
 
-        res.status(201).send({
-            msg: `id ${user.id}, ${user.name} 유저가 생성되었습니다.`
-        });
+            await user.createPermission({
+                title: permission.title,
+                level: permission.level
+            })
+
+            res.status(201).send({
+                msg: `id ${user.id}, ${user.name} 유저가 생성되었습니다.`
+            });
+        }
     }catch(err){
         console.log(err);
         res.status(500).send({msg: "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."})

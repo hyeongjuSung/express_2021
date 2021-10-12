@@ -13,7 +13,7 @@ const getRandomInt = (min, max) => {
 
 const user_sync = async() => {
     try{
-        await User.sync({force:true});
+        // await User.sync({force:true});
         for(let i=0; i<1000; i++){
             const hashpwd = await bcrypt.hash("test1234", 6);
             await User.create({
@@ -29,7 +29,7 @@ const user_sync = async() => {
 
 const board_sync = async() => {
     try{
-        await Board.sync({force:true});
+        // await Board.sync({force:true});
         for(let i=0; i<100; i++){
             await Board.create({
                 title: faker.lorem.sentences(1),
@@ -42,5 +42,8 @@ const board_sync = async() => {
     }
 }
 
-await user_sync();
-await board_sync();
+db.sequelize.query("SET FOREIGN_KEY_CHECKS = 0", {raw: true}).then(async() => {
+	await db.sequelize.sync({force: true});
+	await user_sync();
+	await board_sync();
+});
