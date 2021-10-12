@@ -1,9 +1,8 @@
 import {Router} from "express";
-
 import db from '../models/index.js'
+import user from "../models/user.js";
 
-faker.locale = "ko";
-const { User } = db;
+const { User, Permission } = db;
 
 const userRouter = Router();
 
@@ -53,14 +52,20 @@ userRouter.get("/:id", async(req, res) => {
 //유저생성
 userRouter.post("/", async(req, res) => {
     try{
-        const { name, age } = req.body;
+        const { name, age, password, permission } = req.body;
         if(!name || !age) res.status(400).send({msg: "입력 요청 값이 잘못되었습니다."})
         
         //key, value가 같을 경우 생략 가능
         //const result = await User.create({name: name, age: age});
-        const result = await User.create({name, age});
+        const user = await User.create({name, age, password});
+
+        await user.createPermission({
+            title: permission.title,
+            level: permission.level
+        })
+
         res.status(201).send({
-            msg: `id ${result.id}, ${result.name} 유저가 생성되었습니다.`
+            msg: `id ${user.id}, ${user.name} 유저가 생성되었습니다.`
         });
     }catch(err){
         console.log(err);
